@@ -100,7 +100,9 @@ private extension CreateView {
     var submit: some View {
         Button {
             focusedField = nil
-            vm.create()
+            Task {
+                await vm.create()
+            }
         } label: {
             Text("Submit")
         }

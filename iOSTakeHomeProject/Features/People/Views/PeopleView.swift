@@ -14,6 +14,7 @@ struct PeopleView: View {
     @StateObject private var vm = PeopleViewModel()
     @State private var shouldShowCreate = false
     @State private var shouldShowSuccess = false
+    @State private var hasAppeared = false
 
     var body: some View {
         NavigationView {
@@ -30,10 +31,20 @@ struct PeopleView: View {
                                     DetailView(userId: user.id)
                                 } label: {
                                     PersonItemView(user: user)
+                                        .task {
+                                            if vm.hasReachedEnd(of: user) && !vm.isFetching {
+                                                await vm.fetchNextSetOfUsers()
+                                            }
+                                        }
                                 }
                             }
                         }
                         .padding()
+                    }
+                    .overlay(alignment: .leading) {
+                        if vm.isFetching {
+                            ProgressView()
+                        }
                     }
                 }
             }
@@ -42,9 +53,15 @@ struct PeopleView: View {
                 ToolbarItem(placement: .primaryAction) {
                     create
                 }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    refresh
+                }
             }
-            .onAppear {
-                vm.fetchUsers()
+            .task {
+                if !hasAppeared {
+                    await vm.fetchUsers()
+                    hasAppeared = true
+                }
             }
             .sheet(isPresented: $shouldShowCreate) {
                 CreateView {
@@ -56,7 +73,9 @@ struct PeopleView: View {
             }
             .alert(isPresented: $vm.hasError, error: vm.error) {
                 Button("Retry") {
-                    vm.fetchUsers()
+                    Task {
+                        await vm.fetchUsers() 
+                    }
                 }
             }
             .overlay {
@@ -97,6 +116,16 @@ private extension PeopleView {
                     .system(.headline, design: .rounded)
                     .bold()
                 )
+        }
+        .disabled(vm.isLoading)
+    }
+    var refresh: some View {
+        Button {
+            Task {
+                await vm.fetchUsers()
+            }
+        } label: {
+            Symbols.refresh
         }
         .disabled(vm.isLoading)
     }

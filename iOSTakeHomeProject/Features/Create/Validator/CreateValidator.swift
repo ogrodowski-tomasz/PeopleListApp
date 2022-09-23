@@ -7,7 +7,11 @@
 
 import Foundation
 
-struct CreateValidator {
+protocol CreateValidationImpl {
+    func validate(_ person: NewPerson) throws
+}
+
+struct CreateValidator: CreateValidationImpl {
     
     func validate(_ person: NewPerson) throws {
         if person.firstName.isEmpty {
