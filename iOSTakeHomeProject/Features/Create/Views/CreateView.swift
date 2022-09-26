@@ -11,8 +11,23 @@ struct CreateView: View {
     
     @Environment(\.dismiss) private var dismiss
     @FocusState private var focusedField: Field?
-    @StateObject private var vm = CreateViewModel()
-    let successfulAction: () -> Void
+    @StateObject private var vm: CreateViewModel
+    private let successfulAction: () -> Void
+    
+    init(successfulAction: @escaping () -> Void) {
+        self.successfulAction = successfulAction
+        
+        #if DEBUG
+        if UITestingHelper.isUITesting {
+            let mock: NetworkingManagerImpl = UITestingHelper.isCreateNetworkingSuccessful ? NetworkingManagerCreateSuccessMock() : NetworkingManagerCreateFailureMock()
+            _vm = StateObject(wrappedValue: CreateViewModel(networkingManager: mock)) // We've done validation already, we want to test when networking is failed
+        } else {
+            _vm = StateObject(wrappedValue: CreateViewModel())
+        }
+        #else
+            _vm = StateObject(wrappedValue: CreateViewModel())
+        #endif
+    }
     
     var body: some View {
         NavigationView {
@@ -79,22 +94,25 @@ private extension CreateView {
         } label: {
             Text("Done")
         }
-
+        .accessibilityIdentifier("doneBtn")
     }
     
     var firstName: some View {
         TextField("First Name", text: $vm.person.firstName)
             .focused($focusedField, equals: .firstName)
+            .accessibilityIdentifier("firstNameTxtField")
     }
     
     var lastName: some View {
         TextField("Last Name", text: $vm.person.lastName)
             .focused($focusedField, equals: .lastName)
+            .accessibilityIdentifier("lastNameTxtField")
     }
     
     var job: some View {
         TextField("Job", text: $vm.person.job)
             .focused($focusedField, equals: .job)
+            .accessibilityIdentifier("jobTxtField")
     }
     
     var submit: some View {
@@ -106,5 +124,6 @@ private extension CreateView {
         } label: {
             Text("Submit")
         }
+        .accessibilityIdentifier("submitBtn")
     }
 }

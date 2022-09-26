@@ -25,7 +25,7 @@ struct PersonItemView: View {
 
             VStack(alignment: .leading) {
                 PillView(id: user.id)
-                Text("\(user.firstName) \(user.lastName) ")
+                Text("\(user.firstName) \(user.lastName)")
                     .foregroundColor(Theme.text)
                     .font(
                         .system(.body, design: .rounded)

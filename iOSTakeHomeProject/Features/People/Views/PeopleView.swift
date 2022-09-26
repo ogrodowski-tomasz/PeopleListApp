@@ -11,10 +11,23 @@ struct PeopleView: View {
     
     private let columns = Array(repeating: GridItem(.flexible()), count: 2)
     
-    @StateObject private var vm = PeopleViewModel()
+    @StateObject private var vm: PeopleViewModel
     @State private var shouldShowCreate = false
     @State private var shouldShowSuccess = false
     @State private var hasAppeared = false
+    
+    init() {
+        #if DEBUG
+        if UITestingHelper.isUITesting {
+            let mock: NetworkingManagerImpl = UITestingHelper.isPeopleNetworkingSuccessful ? NetworkingManagerUserResponseSuccessMock() : NetworkingManagerUserDetailsResponseFailureMock()
+            _vm = StateObject(wrappedValue: PeopleViewModel(networkingManager: mock))
+        } else {
+            _vm = StateObject(wrappedValue: PeopleViewModel())
+        }
+        #else
+            _vm = StateObject(wrappedValue: PeopleViewModel())
+        #endif
+    }
 
     var body: some View {
         NavigationView {
@@ -31,6 +44,7 @@ struct PeopleView: View {
                                     DetailView(userId: user.id)
                                 } label: {
                                     PersonItemView(user: user)
+                                        .accessibilityIdentifier("item_\(user.id)")
                                         .task {
                                             if vm.hasReachedEnd(of: user) && !vm.isFetching {
                                                 await vm.fetchNextSetOfUsers()
@@ -40,6 +54,10 @@ struct PeopleView: View {
                             }
                         }
                         .padding()
+                        .accessibilityIdentifier("peopleGrid")
+                    }
+                    .refreshable {
+                        await vm.fetchUsers()
                     }
                     .overlay(alignment: .leading) {
                         if vm.isFetching {
@@ -118,6 +136,7 @@ private extension PeopleView {
                 )
         }
         .disabled(vm.isLoading)
+        .accessibilityIdentifier("createBtn")
     }
     var refresh: some View {
         Button {

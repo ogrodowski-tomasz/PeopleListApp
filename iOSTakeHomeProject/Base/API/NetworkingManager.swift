@@ -87,13 +87,13 @@ extension NetworkingManager.NetworkingError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "URL isn't valid."
+            return "URL isn't valid"
         case .custom(let error):
             return "Something went wrong: \(error.localizedDescription)"
         case .invalidStatusCode:
-            return "Status code falls into the wrong range."
+            return "Status code falls into the wrong range"
         case .invalidData:
-            return "Response data is invalid."
+            return "Response data is invalid"
         case .failedToDecode(let error):
             return "Decode failure occured: \(error)"
         }
